@@ -374,6 +374,13 @@
           item._baslik = normalize(item.baslik.toLowerCase());
           item._yore = normalize((item.yore || '').toLowerCase());
         });
+        // Başlıkları türkü listesine aktar
+        aramaIndeksi.forEach(item => {
+          const turku = tumTurkuler.find(t => t.path === item.path);
+          if (turku) turku.baslik = item.baslik;
+        });
+        listeGoster(tumTurkuler);
+   
         indeksHazir = true;
         document.getElementById('aramaDurum').textContent = '';
         // Eğer kullanıcı zaten bir şey yazmışsa tekrar ara
