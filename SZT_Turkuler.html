@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SZT Türküler</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Noto+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --kahve: #8A7A5A;
+      --kahve-koyu: #6A5A3A;
+      --kahve-acik: #B0A080;
+      --nakarat: #6A3A1A;
+      --kagit: #FAFAF7;
+      --kagit-koyu: #F2EDE0;
+      --metin: #2A2A2A;
+      --metin-soluk: #7A7A7A;
+      --cetvel: rgba(138, 122, 90, 0.18);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans', sans-serif;
+      background: var(--kagit-koyu);
+      color: var(--metin);
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: var(--kahve);
+      color: #fff;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-family: 'Noto Sans', sans-serif;
+      font-size: 16px;
+      font-weight: 500;
+      flex: 1;
+    }
+
+    #turkuSayisi {
+      font-size: 11px;
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    /* ── WORKSPACE ── */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--cetvel);
+      background: var(--kagit);
+      overflow: hidden;
+    }
+
+    .sidebar-top {
+      padding: 10px;
+      border-bottom: 1px solid var(--cetvel);
+      flex-shrink: 0;
+    }
+
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      background: var(--kagit-koyu);
+      border: 1px solid var(--cetvel);
+      border-radius: 8px;
+      padding: 0 10px;
+    }
+
+    .search-wrap input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 8px 6px;
+      font-size: 13px;
+      font-family: 'Noto Sans', sans-serif;
+      color: var(--metin);
+      outline: none;
+    }
+
+    .search-wrap input::placeholder { color: var(--metin-soluk); }
+
+    .turku-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+      scrollbar-width: none;
+    }
+    .turku-list::-webkit-scrollbar { display: none; }
+
+    .liste-ve-indeks {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .harf-indeks {
+      width: 22px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      background: var(--kagit-koyu);
+      border-left: 1px solid var(--cetvel);
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    .harf-indeks span {
+      font-size: 9px;
+      font-weight: 600;
+      color: var(--kahve);
+      line-height: 1;
+      padding: 0 2px;
+    }
+
+    .harf-indeks span.aktif-harf {
+      color: #fff;
+      background: var(--kahve);
+      border-radius: 3px;
+    }
+
+    .harf-balon {
+      display: none;
+      position: fixed;
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--kahve);
+      color: #fff;
+      font-size: 24px;
+      font-weight: 600;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .harf-balon.gorunur { display: flex; }
+
+    .turku-item {
+      padding: 8px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      border-bottom: 1px solid var(--cetvel);
+      line-height: 1.4;
+      display: flex;
+      align-items: center;
+    }
+
+    .turku-item:hover { background: var(--kagit-koyu); }
+    .turku-item.active { background: rgba(138,122,90,0.12); font-weight: 500; }
+
+    .sidebar-footer {
+      padding: 8px 14px;
+      font-size: 11px;
+      color: var(--metin-soluk);
+      border-top: 1px solid var(--cetvel);
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* ── OKUYUCU PANELİ ── */
+    .okuyucu {
+      flex: 1;
+      overflow-y: auto;
+      padding: 32px 40px;
+      background: var(--kagit);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--metin-soluk);
+      gap: 12px;
+    }
+
+    .empty-state .big { font-size: 48px; opacity: 0.3; }
+    .empty-state p { font-size: 14px; }
+
+    .icerik { max-width: 600px; margin: 0 auto; display: none; }
+    .icerik.gorünür { display: block; }
+
+    .turku-baslik {
+      font-family: 'Crimson Pro', serif;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--kahve-koyu);
+      letter-spacing: 0.5px;
+      margin-bottom: 20px;
+    }
+
+    .ayrac {
+      width: 100%;
+      height: 1px;
+      background: var(--cetvel);
+      margin-bottom: 20px;
+    }
+
+    .sozler {
+      font-family: 'Crimson Pro', serif;
+      font-size: 19px;
+      line-height: 1.5;
+      color: var(--metin);
+    }
+
+    .sozler p { margin: 0; min-height: 1.5em; }
+    .sozler p.bos { min-height: 0; height: 0.8em; }
+    .sozler b { color: var(--nakarat); font-weight: 600; }
+    .sozler i { font-style: italic; }
+
+    .meta-bolum {
+      margin-top: 28px;
+      padding-top: 20px;
+      border-top: 1px solid var(--cetvel);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .meta-satir {
+      font-size: 13px;
+      color: var(--metin-soluk);
+    }
+
+    .meta-satir strong {
+      color: var(--kahve-koyu);
+      font-weight: 600;
+      margin-right: 4px;
+    }
+
+    .list-loading {
+      padding: 24px;
+      text-align: center;
+      color: var(--metin-soluk);
+      font-size: 13px;
+    }
+
+    .arama-ipucu {
+      display: block;
+      font-size: 11px;
+      color: var(--kahve);
+      opacity: 0.7;
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .arama-durum {
+      font-size: 10px;
+      color: var(--metin-soluk);
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    /* ── MOBİL ── */
+    @media (max-width: 600px) {
+      .workspace { flex-direction: column; }
+
+      .sidebar {
+        width: 100%;
+        height: 220px;
+        border-right: none;
+        border-bottom: 1px solid var(--cetvel);
+      }
+
+      .okuyucu { padding: 20px 16px; }
+      .turku-baslik { font-size: 22px; }
+      .sozler { font-size: 17px; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>SZT Türküler <span style="font-weight:300;font-size:13px;opacity:0.8">(Mümtaz Bir Toparlama)</span></h1>
+    <span id="turkuSayisi">yükleniyor…</span>
+  </header>
+
+  <div class="workspace">
+
+    <!-- SOL: LİSTE -->
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="search-wrap">
+          <span>🔍</span>
+          <input type="text" id="aramaInput" placeholder="Başlık veya söz ara…" oninput="aramaYap(this.value)">
+        </div>
+        <div class="arama-durum" id="aramaDurum"></div>
+      </div>
+      <div class="liste-ve-indeks">
+        <div class="turku-list" id="turkuList">
+          <div class="list-loading">Yükleniyor…</div>
+        </div>
+        <div class="harf-indeks" id="harfIndeks"></div>
+      </div>
+      <div class="harf-balon" id="harfBalon"></div>
+      <div class="sidebar-footer" id="sidebarFooter"></div>
+    </aside>
+
+    <!-- SAĞ: OKUYUCU -->
+    <div class="okuyucu">
+      <div class="empty-state" id="emptyState">
+        <div class="big">𝄞</div>
+        <p>Bir türkü seçin</p>
+      </div>
+      <div class="icerik" id="icerik">
+        <div class="turku-baslik" id="gosterBaslik"></div>
+        <div class="ayrac"></div>
+        <div class="sozler" id="gosterSozler"></div>
+        <div class="meta-bolum" id="gosterMeta"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const REPO_OWNER = 'sztoker';
+    const REPO_NAME  = 'szt-turkuler';
+    const BRANCH     = 'main';
+    const TURKULER_PATHS = ['turkuler/1', 'turkuler/2a', 'turkuler/2'];
+
+    let tumTurkuler = [];
+    let aktifPath = null;
+    let aramaIndeksi = null;   // search-index.json verisi
+    let indeksHazir = false;
+
+    // ── API ──
+    async function apiGet(url) {
+      const r = await fetch(url, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.json();
+    }
+
+    // ── ARAMA İNDEKSİNİ YÜKLE ──
+    async function indeksYukle() {
+      try {
+        const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/search-index.json`;
+        const r = await fetch(url);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        aramaIndeksi = await r.json();
+        // path → normalize metin Map'i oluştur
+        aramaIndeksi.forEach(item => {
+          item._metin = normalize(item.metin.toLowerCase());
+          item._baslik = normalize(item.baslik.toLowerCase());
+          item._yore = normalize((item.yore || '').toLowerCase());
+        });
+        indeksHazir = true;
+        document.getElementById('aramaDurum').textContent = '';
+        // Eğer kullanıcı zaten bir şey yazmışsa tekrar ara
+        const q = document.getElementById('aramaInput').value;
+        if (q.trim()) aramaYap(q);
+      } catch (e) {
+        document.getElementById('aramaDurum').textContent = 'İçerik araması kullanılamıyor';
+      }
+    }
+
+    // ── LİSTE YÜKLE ──
+    async function turkuleriYukle() {
+      try {
+        const istekler = TURKULER_PATHS.map(path =>
+          apiGet(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}?ref=${BRANCH}`)
+            .then(dosyalar => ({ path, dosyalar }))
+            .catch(() => ({ path, dosyalar: [] }))
+        );
+        const sonuclar = await Promise.all(istekler);
+        tumTurkuler = [];
+        for (const { path, dosyalar } of sonuclar) {
+          const klasorAdi = path.split('/').pop();
+          dosyalar
+            .filter(d => d.name.endsWith('.json'))
+            .forEach(d => tumTurkuler.push({ name: d.name, path: d.path, download_url: d.download_url, klasor: klasorAdi }));
+        }
+        tumTurkuler.sort((a, b) => a.name.localeCompare(b.name, 'tr'));
+        document.getElementById('turkuSayisi').textContent = `${tumTurkuler.length} türkü`;
+        listeGoster(tumTurkuler);
+        // İndeksi arka planda yükle
+        document.getElementById('aramaDurum').textContent = 'İçerik araması yükleniyor…';
+        indeksYukle();
+      } catch (e) {
+        document.getElementById('turkuList').innerHTML =
+          `<div class="list-loading" style="color:#c0392b">Bağlantı hatası: ${e.message}</div>`;
+      }
+    }
+
+    // ── LİSTE GÖSTER ──
+    function listeGoster(liste, eslesmeler) {
+      const el = document.getElementById('turkuList');
+      if (!liste.length) {
+        el.innerHTML = '<div class="list-loading">Sonuç bulunamadı</div>';
+        document.getElementById('sidebarFooter').textContent = '';
+        return;
+      }
+      el.innerHTML = liste.map(t => {
+        const baslik = t.baslik || t.name.replace('.json','').replace(/-/g,' ');
+        let ipucu = '';
+        if (eslesmeler && eslesmeler.has(t.path)) {
+          const tip = eslesmeler.get(t.path);
+          if (tip === 'metin') ipucu = '<span class="arama-ipucu">…sözlerde eşleşme</span>';
+          else if (tip === 'yore') ipucu = '<span class="arama-ipucu">…yörede eşleşme</span>';
+        }
+        return `<div class="turku-item${aktifPath === t.path ? ' active' : ''}" data-path="${t.path}" onclick="turkuAc('${t.path}')"><div>${baslik}${ipucu}</div></div>`;
+      }).join('');
+      document.getElementById('sidebarFooter').textContent = `${liste.length} türkü`;
+    }
+
+    // ── ARAMA ──
+    function aramaYap(q) {
+      if (!q.trim()) { listeGoster(tumTurkuler); return; }
+      const kucuk = normalize(q.toLowerCase());
+
+      // Başlıkta eşleşenler
+      const baslikSonuc = new Set();
+      const filtrelenmis = tumTurkuler.filter(t => {
+        const ad = normalize(t.name.replace('.json','').toLowerCase());
+        const baslik = normalize((t.baslik || '').toLowerCase());
+        const eslesme = ad.includes(kucuk) || baslik.includes(kucuk);
+        if (eslesme) baslikSonuc.add(t.path);
+        return eslesme;
+      });
+
+      // İçerikte eşleşenler (indeks hazırsa)
+      const eslesmeler = new Map(); // path → 'baslik' | 'metin' | 'yore'
+      filtrelenmis.forEach(t => eslesmeler.set(t.path, 'baslik'));
+
+      if (indeksHazir && aramaIndeksi) {
+        aramaIndeksi.forEach(item => {
+          if (baslikSonuc.has(item.path)) return; // zaten başlıkta bulundu
+          let tip = null;
+          if (item._metin.includes(kucuk)) tip = 'metin';
+          else if (item._yore.includes(kucuk)) tip = 'yore';
+          if (tip) {
+            // tumTurkuler'de bul
+            const turku = tumTurkuler.find(t => t.path === item.path);
+            if (turku) {
+              turku.baslik = turku.baslik || item.baslik;
+              filtrelenmis.push(turku);
+              eslesmeler.set(turku.path, tip);
+            }
+          }
+        });
+      }
+
+      listeGoster(filtrelenmis, eslesmeler);
+    }
+
+    function normalize(s) {
+      return s.replace(/ğ/g,'g').replace(/ı/g,'i').replace(/ş/g,'s')
+              .replace(/ç/g,'c').replace(/ö/g,'o').replace(/ü/g,'u');
+    }
+
+    // ── TÜRKÜ AÇ ──
+    async function turkuAc(path) {
+      aktifPath = path;
+      document.querySelectorAll('.turku-item').forEach(el => {
+        el.classList.toggle('active', el.dataset.path === path);
+      });
+
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('icerik').classList.remove('gorünür');
+      document.getElementById('gosterSozler').innerHTML = '<div class="list-loading">Yükleniyor…</div>';
+      document.getElementById('icerik').classList.add('gorünür');
+
+      try {
+        const turku = tumTurkuler.find(t => t.path === path);
+        const data = await fetch(turku.download_url).then(r => r.json());
+        turku.baslik = data.baslik;
+
+        document.getElementById('gosterBaslik').textContent = data.baslik;
+        document.getElementById('gosterSozler').innerHTML = sozleriIsle(data.sozler_html || '');
+        document.getElementById('gosterMeta').innerHTML = metaOlustur(data.meta || {});
+      } catch (e) {
+        document.getElementById('gosterSozler').innerHTML = `<div style="color:#c0392b">Yüklenemedi: ${e.message}</div>`;
+      }
+    }
+
+    // ── SÖZ PARSER ──
+    function sozleriIsle(html) {
+      if (!html) return '';
+      html = html.replace(/<div[^>]*>/gi, '<p>').replace(/<\/div>/gi, '</p>');
+      html = html.replace(/<font[^>]*>/gi, '').replace(/<\/font>/gi, '');
+      const satirRegex = /<p([^>]*)>(.*?)<\/p>/gis;
+      let sonuc = '';
+      let m;
+      while ((m = satirRegex.exec(html)) !== null) {
+        const attr = m[1];
+        let icerik = m[2].replace(/<br\s*\/?>/gi, '');
+        const temiz = icerik.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').trim();
+        if (attr.includes('class="bos"') || temiz === '') {
+          sonuc += '<p class="bos"></p>';
+        } else {
+          sonuc += `<p>${icerik}</p>`;
+        }
+      }
+      return sonuc || `<p>${html.replace(/<[^>]*>/g,'')}</p>`;
+    }
+
+    // ── META ──
+    function metaOlustur(meta) {
+      const etiketler = {
+        yore: 'Yöre', soyleyenler: 'Söyleyenler', soz: 'Söz',
+        muzik: 'Müzik', derleyen: 'Derleyen', kaynak_kisi: 'Kaynak',
+        aciklama: 'Açıklama'
+      };
+      return Object.entries(etiketler)
+        .filter(([k]) => meta[k])
+        .map(([k, label]) => `<div class="meta-satir"><strong>${label}:</strong>${meta[k]}</div>`)
+        .join('');
+    }
+
+    // ── HARF İNDEKSİ ──
+    const HARFLER = 'ABCÇDEFGHIİJKLMNOÖPRSŞTUÜVYZ'.split('');
+    const harfNorm = {};
+    HARFLER.forEach(h => harfNorm[h] = normalize(h.toLowerCase()));
+
+    function harfIndeksiOlustur() {
+      const el = document.getElementById('harfIndeks');
+      el.innerHTML = HARFLER.map(h => `<span data-harf="${h}">${h}</span>`).join('');
+
+      // Touch sürükleme
+      let surukleniyor = false;
+
+      function harfBul(y) {
+        const spans = el.querySelectorAll('span');
+        for (const s of spans) {
+          const r = s.getBoundingClientRect();
+          if (y >= r.top && y <= r.bottom) return s.dataset.harf;
+        }
+        return null;
+      }
+
+      function harfeGit(harf) {
+        if (!harf) return;
+        // Aktif harfi işaretle
+        el.querySelectorAll('span').forEach(s => s.classList.toggle('aktif-harf', s.dataset.harf === harf));
+        // Balonu göster
+        const balon = document.getElementById('harfBalon');
+        const sidebar = document.querySelector('.sidebar');
+        const rect = sidebar.getBoundingClientRect();
+        balon.textContent = harf;
+        balon.classList.add('gorunur');
+        balon.style.left = (rect.left + rect.width / 2 - 26) + 'px';
+        balon.style.top = (rect.top + rect.height / 2 - 26) + 'px';
+
+        // Listedeki ilk eşleşen öğeye kaydır
+        const norm = harfNorm[harf];
+        const liste = document.getElementById('turkuList');
+        const items = liste.querySelectorAll('.turku-item');
+        for (const item of items) {
+          const txt = normalize(item.textContent.trim().toLowerCase());
+          if (txt.length > 0 && txt[0] === norm) {
+            item.scrollIntoView({ block: 'start' });
+            break;
+          }
+        }
+      }
+
+      function balonGizle() {
+        document.getElementById('harfBalon').classList.remove('gorunur');
+        el.querySelectorAll('span').forEach(s => s.classList.remove('aktif-harf'));
+      }
+
+      // Touch
+      el.addEventListener('touchstart', e => {
+        e.preventDefault();
+        surukleniyor = true;
+        harfeGit(harfBul(e.touches[0].clientY));
+      }, { passive: false });
+
+      el.addEventListener('touchmove', e => {
+        e.preventDefault();
+        if (surukleniyor) harfeGit(harfBul(e.touches[0].clientY));
+      }, { passive: false });
+
+      el.addEventListener('touchend', () => {
+        surukleniyor = false;
+        balonGizle();
+      });
+
+      // Mouse
+      el.addEventListener('mousedown', e => {
+        surukleniyor = true;
+        harfeGit(harfBul(e.clientY));
+      });
+
+      document.addEventListener('mousemove', e => {
+        if (surukleniyor) harfeGit(harfBul(e.clientY));
+      });
+
+      document.addEventListener('mouseup', () => {
+        if (surukleniyor) { surukleniyor = false; balonGizle(); }
+      });
+    }
+
+    // ── BAŞLAT ──
+    turkuleriYukle();
+    harfIndeksiOlustur();
+  </script>
+</body>
+</html>
